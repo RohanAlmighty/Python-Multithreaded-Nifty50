@@ -1,32 +1,13 @@
 import time
+from scraper_manager import ScraperManager
 
-from multiprocessing import Queue
-
-from workers.wiki_worker import WikiWorker
-from workers.google_finance_worker import GoogleFinanceScheduler
+NUMBER_OF_WORKERS = 10
 
 
-def main():
-    symbol_queue = Queue()
+def main() -> None:
+    scraper_manager = ScraperManager(num_workers=NUMBER_OF_WORKERS)
     scraper_start_time = time.time()
-
-    wiki_worker = WikiWorker()
-    google_finance_scheduler_threads = []
-
-    num_google_finance_worker = 10
-    for i in range(num_google_finance_worker):
-        google_finance_scheduler = GoogleFinanceScheduler(input_queue=symbol_queue)
-        google_finance_scheduler_threads.append(google_finance_scheduler)
-
-    for symbol in wiki_worker.get_nifty_50_companies():
-        symbol_queue.put(symbol)
-
-    for i in range(len(google_finance_scheduler_threads)):
-        symbol_queue.put("DONE")
-
-    for i in range(len(google_finance_scheduler_threads)):
-        google_finance_scheduler_threads[i].join()
-
+    scraper_manager.run()
     print("--------------------------------------------------------")
     print("Time Taken : ", round(time.time() - scraper_start_time, 1))
 
